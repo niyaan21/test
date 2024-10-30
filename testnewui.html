@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Email Dashboard</title>
+    <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin-allow-popups">
+    <meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp">
+    <style>
+            /* General reset and layout styling */
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        background-color: #f4f6f8;
+        color: #333;
+    }
+    
+/* Sidebar styling */
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        height: 100%;
+        width: 80px;
+        padding: 20px;
+        background: linear-gradient(180deg, #4b6cb7, #182848);
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-size: 24px;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+        transition: width 0.3s ease; /* Smooth transition */
+    }
+
+    /* Collapsed styles */
+    .sidebar.collapsed {
+        width: 10px;
+    }
+
+    .main-content {
+        margin-left: 100px; /* Initial margin matching sidebar width */
+        padding: 20px;
+        flex-grow: 1;
+        transition: margin-left 0.3s ease; /* Smooth transition */
+    }
+
+    .main-content.collapsed {
+        margin-left: 60px; /* Match the collapsed sidebar width */
+    }
+
+    
+    /* Navbar styling */
+    .navbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border-radius: 8px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    .navbar h1 {
+        font-size: 24px;
+        margin: 0;
+    }
+    
+    /* Card styling */
+    .content {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 20px;
+    }
+    
+    .card {
+        width: 250px;
+        background-color: #ffffff;
+        border: 2px solid transparent;
+        border-radius: 10px;
+        padding: 20px;
+        margin: 10px;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
+    }
+
+    .card:hover {
+        transform: translateY(-8px);
+        border-color: #007bff;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .card h2 {
+        margin: 0;
+        color: #4b6cb7;
+    }
+    
+    .email-count {
+        font-size: 36px;
+        font-weight: bold;
+        color: #007bff;
+        margin: 15px 0;
+    }
+    
+    /* Google Sign-In button styling */
+    .google-signin-container {
+        display: flex;
+        justify-content: center;
+        margin-top: 30px;
+    }
+    
+    /* Table styling */
+    .table-container {
+        margin-top: 30px;
+        display: flex;
+        justify-content: center;
+    }
+    
+    table {
+        width: 90%;
+        border-collapse: collapse;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-top: 20px;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    table, th, td {
+        border: 1px solid #ddd;
+        padding: 10px;
+    }
+    
+    th {
+        background-color: #4b6cb7;
+        color: white;
+    }
+    
+    td {
+        text-align: center;
+    }
+    
+    tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+    
+    /* Icon styling */
+    .icon {
+        font-size: 20px;
+        color: #007bff;
+    }
+    </style>
+
+    <!-- Load the GAPI library first -->
+    <script src="https://apis.google.com/js/api.js"></script>
+    <!-- Load the Google Identity Services library -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    </head>
+    <body>
+    <!-- Sidebar toggle button, inside the sidebar for easy access -->
+    <div class="sidebar">
+        <div onclick="toggleSidebar()">☰</div>
+        <!-- Other sidebar content -->
+    </div>
+
+
+
+    <div class="main-content">
+        <nav class="navbar">
+            <h1>Email Dashboard</h1>
+            <div class="account"></div>
+        </nav>
+
+        <div class="content">
+            <div class="card" onclick="showSummary('Work')">
+                <h2>Work</h2>
+                <div id="work-email-count" class="email-count">0</div>
+                <div>Number of Emails</div>
+            </div>
+
+            <div class="card" onclick="showSummary('Personal')">
+                <h2>Personal</h2>
+                <div id="personal-email-count" class="email-count">0</div>
+                <div>Number of Emails</div>
+            </div>
+        </div>
+
+    <!-- Google Sign-In button -->
+    <div class="google-signin-container">
+        <div id="g_id_onload"
+             data-client_id="707809225486-qs8elc8gokrbgrr2r50dtqf6kv6litjj.apps.googleusercontent.com"
+             data-context="signin"
+             data-ux_mode="popup"
+             data-callback="handleCredentialResponse"
+             data-auto_prompt="false">
+        </div>
+        <div class="g_id_signin"
+             data-type="standard"
+             data-shape="rectangular"
+             data-theme="outline"
+             data-text="signin_with"
+             data-size="large"
+             data-logo_alignment="left">
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <tr>
+                <th>Emails</th>
+                <th>Action</th>
+            </tr>
+            <tr>
+                <td>Thread 1</td>
+                <td><span class="icon">📧</span></td>
+            </tr>
+            <tr>
+                <td>Thread 2</td>
+                <td><span class="icon">📧</span></td>
+            </tr>
+            <tr>
+                <td>Thread 3</td>
+                <td><span class="icon">📧</span></td>
+            </tr>
+            <tr>
+                <td>Thread 4</td>
+                <td><span class="icon">📧</span></td>
+            </tr>
+            <tr>
+                <td>Thread 5</td>
+                <td><span class="icon">📧</span></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+    <script>
+        // Configuration
+        const CLIENT_ID = '707809225486-qs8elc8gokrbgrr2r50dtqf6kv6litjj.apps.googleusercontent.com';
+        const API_KEY = 'AIzaSyBqdOlaL21qWByQIdDlFBcvNRWos2Pl-CA';
+        const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest';
+        const SCOPES = 'https://www.googleapis.com/auth/gmail.readonly';
+
+        let tokenClient;
+        let gapiInited = false;
+        let gisInited = false;
+
+        // Initialize the Google API client
+        function gapiLoaded() {
+            gapi.load('client', initializeGapiClient);
+        }
+
+        async function initializeGapiClient() {
+            try {
+                await gapi.client.init({
+                    apiKey: API_KEY,
+                    discoveryDocs: [DISCOVERY_DOC],
+                });
+                gapiInited = true;
+                maybeEnableButtons();
+            } catch (err) {
+                console.error('Error initializing GAPI client:', err);
+            }
+        }
+
+        // Initialize Google Identity Services
+        function gisLoaded() {
+            tokenClient = google.accounts.oauth2.initTokenClient({
+                client_id: CLIENT_ID,
+                scope: SCOPES,
+                callback: '', // defined later
+            });
+            gisInited = true;
+            maybeEnableButtons();
+        }
+
+        function maybeEnableButtons() {
+            if (gapiInited && gisInited) {
+                document.querySelector('.g_id_signin').style.display = 'block';
+            }
+        }
+
+        // Handle the credential response
+        async function handleCredentialResponse(response) {
+            if (!response.clientId || !response.credential) {
+                console.error('Invalid credential response');
+                return;
+            }
+
+            try {
+                // Set up the token client callback
+                tokenClient.callback = async (resp) => {
+                    if (resp.error !== undefined) {
+                        throw resp;
+                    }
+                    await getEmailsCount();
+                };
+
+                // Request an access token
+                tokenClient.requestAccessToken({
+                    prompt: 'consent'
+                });
+            } catch (err) {
+                console.error('Error handling credential response:', err);
+            }
+        }
+
+        async function getEmailsCount() {
+            try {
+                const response = await gapi.client.gmail.users.labels.get({
+                    'userId': 'me',
+                    'id': 'INBOX'
+                });
+                const emailCount = response.result.messagesTotal;
+                document.getElementById('work-email-count').innerText = emailCount;
+                document.getElementById('personal-email-count').innerText = emailCount;
+            } catch (err) {
+                console.error("Error fetching email count:", err);
+            }
+        }
+
+        function handleSignoutClick() {
+            const token = gapi.client.getToken();
+            if (token !== null) {
+                google.accounts.oauth2.revoke(token.access_token);
+                gapi.client.setToken('');
+                document.getElementById('work-email-count').innerText = '0';
+                document.getElementById('personal-email-count').innerText = '0';
+            }
+        }
+
+        function toggleSidebar() {
+            document.querySelector('.sidebar').classList.toggle('collapsed');
+            document.querySelector('.main-content').classList.toggle('collapsed');
+        }
+
+
+        function showSummary(type) {
+            const token = gapi.client.getToken();
+            if (!token) {
+                alert('Please sign in first');
+                return;
+            }
+            alert('Showing summary for ' + type + ' emails.');
+        }
+
+        // Add event listeners for GAPI and GIS loading
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load GAPI
+            gapiLoaded();
+            // Load GIS
+            gisLoaded();
+        });
+    </script>
+</body>
+</html>
