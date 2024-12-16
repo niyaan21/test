@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Email Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://apis.google.com/js/api.js"></script>
+    <!-- Add D3.js for thread visualization -->
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <!-- Add Chart.js for analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Add Moment.js for better date handling -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+</head>
+<body>
+    <!-- Welcome Screen (shown before sign-in) -->
+    <div class="welcome-screen" id="welcome-screen">
+        <div class="welcome-content">
+            <div class="welcome-header">
+                <i class="fas fa-envelope-open-text fa-3x"></i>
+                <h1>Welcome to EmailDash</h1>
+                <p class="welcome-subtitle">Your Smart Email Management Solution</p>
+            </div>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <i class="fas fa-brain"></i>
+                    <h3>Smart Categorization</h3>
+                    <p>Automatically organizes your emails into meaningful categories</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-star"></i>
+                    <h3>Priority Inbox</h3>
+                    <p>Never miss important emails with smart priority detection</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-moon"></i>
+                    <h3>Dark Mode</h3>
+                    <p>Comfortable viewing experience day and night</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-chart-pie"></i>
+                    <h3>Email Analytics</h3>
+                    <p>Insights into your email patterns and usage</p>
+                </div>
+            </div>
+            <div class="signin-container welcome-signin" id="signin-container">
+                <button class="google-signin-btn" id="google-signin">
+                    <img src="https://cdn1.iconfinder.com/data/icons/google-s-logo/150/Google_Icons-09-512.png" alt="Google Logo">
+                    Sign in with Google
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="app-container" id="app-container" style="display: none;">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="logo">
+                <i class="fas fa-envelope-open-text fa-2x"></i>
+                <h1>EmailDash</h1>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-category="inbox">
+                    <i class="fas fa-inbox"></i>
+                    <span>Inbox</span>
+                    <span class="count" id="inbox-count">0</span>
+                </a>
+                <a href="#" class="nav-item" data-category="priority">
+                    <i class="fas fa-star"></i>
+                    <span>Priority</span>
+                    <span class="count" id="priority-count">0</span>
+                </a>
+                <a href="#" class="nav-item" data-category="starred">
+                    <i class="fas fa-bookmark"></i>
+                    <span>Starred</span>
+                    <span class="count" id="starred-count">0</span>
+                </a>
+                <a href="#" class="nav-item" data-category="work">
+                    <i class="fas fa-briefcase"></i>
+                    <span>Work</span>
+                    <span class="count" id="work-count">0</span>
+                </a>
+                <a href="#" class="nav-item" data-category="personal">
+                    <i class="fas fa-user"></i>
+                    <span>Personal</span>
+                    <span class="count" id="personal-count">0</span>
+                </a>
+                <a href="#" class="nav-item" data-category="social">
+                    <i class="fas fa-users"></i>
+                    <span>Social</span>
+                    <span class="count" id="social-count">0</span>
+                </a>
+                <a href="#" class="nav-item" data-category="updates">
+                    <i class="fas fa-bell"></i>
+                    <span>Updates</span>
+                    <span class="count" id="updates-count">0</span>
+                </a>
+            </nav>
+
+            <div class="user-profile">
+                <img src="https://ui-avatars.com/api/?name=User" alt="User Avatar" class="avatar" id="user-avatar">
+                <div class="user-info">
+                    <h3 class="user-name" id="user-name">Sign in to start</h3>
+                    <p class="user-email" id="user-email"></p>
+                </div>
+            </div>
+
+            <div class="theme-container">
+                <button id="theme-toggle" class="theme-toggle" title="Toggle dark mode">
+                    <i class="fas fa-moon"></i>
+                    <i class="fas fa-sun"></i>
+                </button>
+                <span class="theme-label">Theme</span>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Add Contacts Panel -->
+            <aside class="contacts-panel">
+                <div class="contacts-header">
+                    <h2>Contacts</h2>
+                    <button class="add-contact-btn">
+                        <i class="fas fa-user-plus"></i>
+                    </button>
+                </div>
+                <div class="contacts-search">
+                    <input type="text" placeholder="Search contacts...">
+                </div>
+                <div class="contacts-groups">
+                    <h3>Groups</h3>
+                    <div class="groups-list">
+                        <!-- Groups will be added dynamically -->
+                    </div>
+                </div>
+                <div id="contacts-list" class="contacts-list">
+                    <!-- Contacts will be added dynamically -->
+                </div>
+            </aside>
+
+            <!-- Add Smart Folders -->
+            <div class="smart-folders-container">
+                <h3>Smart Folders</h3>
+                <div id="smart-folders" class="smart-folders">
+                    <!-- Smart folders will be added dynamically -->
+                </div>
+            </div>
+
+            <!-- Add Collaboration Section -->
+            <div class="collaboration-section">
+                <div class="shared-emails">
+                    <h3>Shared with Me</h3>
+                    <div id="shared-emails-list">
+                        <!-- Shared emails will be added dynamically -->
+                    </div>
+                </div>
+                <div class="team-activity">
+                    <h3>Team Activity</h3>
+                    <div id="activity-feed">
+                        <!-- Activity feed will be added dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Header -->
+            <header class="header">
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search emails..." class="search-input">
+                </div>
+                
+                <div class="header-actions">
+                    <button id="refresh-emails" class="action-button" title="Refresh emails">
+                        <i class="fas fa-sync"></i>
+                    </button>
+                    <button id="filter-button" class="action-button" title="Filter emails">
+                        <i class="fas fa-filter"></i>
+                    </button>
+                    <button id="view-mode" class="action-button" title="Change view">
+                        <i class="fas fa-th-list"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Email Dashboard -->
+            <div class="email-dashboard">
+                <!-- Stats Cards -->
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-icon priority">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Priority</h3>
+                            <p id="priority-stat">0</p>
+                            <div class="stat-progress">
+                                <div class="progress-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon work">
+                            <i class="fas fa-briefcase"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Work</h3>
+                            <p id="work-stat">0</p>
+                            <div class="stat-progress">
+                                <div class="progress-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon personal">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Personal</h3>
+                            <p id="personal-stat">0</p>
+                            <div class="stat-progress">
+                                <div class="progress-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon social">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Social</h3>
+                            <p id="social-stat">0</p>
+                            <div class="stat-progress">
+                                <div class="progress-bar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Filters -->
+                <div class="quick-filters">
+                    <button class="filter-chip active" data-filter="all">All</button>
+                    <button class="filter-chip" data-filter="unread">Unread</button>
+                    <button class="filter-chip" data-filter="starred">Starred</button>
+                    <button class="filter-chip" data-filter="attachments">With Attachments</button>
+                    <button class="filter-chip" data-filter="today">Today</button>
+                </div>
+
+                <!-- Email List -->
+                <div class="email-list" id="email-list">
+                    <!-- Emails will be added here dynamically -->
+                </div>
+
+                <!-- Analytics Dashboard -->
+                <div class="analytics-dashboard">
+                    <div class="analytics-header">
+                        <h2>Email Analytics</h2>
+                        <select id="analytics-period">
+                            <option value="week">Last Week</option>
+                            <option value="month">Last Month</option>
+                            <option value="year">Last Year</option>
+                        </select>
+                    </div>
+                    <div class="analytics-grid">
+                        <div class="analytics-card">
+                            <div class="analytics-icon">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                            <div class="analytics-info">
+                                <h3>Email Volume</h3>
+                                <div class="analytics-chart" id="volume-chart"></div>
+                            </div>
+                        </div>
+                        <div class="analytics-card">
+                            <div class="analytics-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="analytics-info">
+                                <h3>Response Time</h3>
+                                <div class="analytics-chart" id="response-chart"></div>
+                            </div>
+                        </div>
+                        <div class="analytics-card">
+                            <div class="analytics-icon">
+                                <i class="fas fa-tags"></i>
+                            </div>
+                            <div class="analytics-info">
+                                <h3>Category Distribution</h3>
+                                <div class="analytics-chart" id="category-chart"></div>
+                            </div>
+                        </div>
+                        <div class="analytics-card">
+                            <div class="analytics-icon">
+                                <i class="fas fa-user-friends"></i>
+                            </div>
+                            <div class="analytics-info">
+                                <h3>Top Contacts</h3>
+                                <div class="contacts-list" id="top-contacts"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="insights-panel">
+                        <h3>Smart Insights</h3>
+                        <div class="insights-list" id="email-insights">
+                            <!-- Insights will be added dynamically -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- AI Assistant Panel -->
+                <div class="ai-assistant-panel" id="ai-assistant">
+                    <div class="assistant-header">
+                        <div class="assistant-avatar">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="assistant-info">
+                            <h3>AI Assistant</h3>
+                            <p>Here to help you manage emails efficiently</p>
+                        </div>
+                    </div>
+                    <div class="assistant-suggestions">
+                        <div class="suggestion-group">
+                            <h4>Action Items</h4>
+                            <div class="action-items" id="action-items"></div>
+                        </div>
+                        <div class="suggestion-group">
+                            <h4>Smart Replies</h4>
+                            <div class="smart-replies" id="smart-replies"></div>
+                        </div>
+                        <div class="suggestion-group">
+                            <h4>Time Management</h4>
+                            <div class="time-suggestions" id="time-suggestions"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Productivity Tools -->
+                <div class="productivity-tools">
+                    <div class="tools-header">
+                        <h3>Productivity Tools</h3>
+                    </div>
+                    <div class="tools-grid">
+                        <button class="tool-button" id="schedule-emails">
+                            <i class="fas fa-clock"></i>
+                            <span>Schedule Emails</span>
+                        </button>
+                        <button class="tool-button" id="email-templates">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Templates</span>
+                        </button>
+                        <button class="tool-button" id="auto-categorize">
+                            <i class="fas fa-tags"></i>
+                            <span>Auto Categorize</span>
+                        </button>
+                        <button class="tool-button" id="batch-actions">
+                            <i class="fas fa-layer-group"></i>
+                            <span>Batch Actions</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Email Rules Manager -->
+                <div class="rules-manager" id="rules-manager">
+                    <div class="rules-header">
+                        <h3>Email Rules</h3>
+                        <button class="add-rule-btn">
+                            <i class="fas fa-plus"></i>
+                            New Rule
+                        </button>
+                    </div>
+                    <div class="rules-list" id="email-rules">
+                        <!-- Rules will be added dynamically -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Email Intelligence -->
+            <div class="email-intelligence">
+                <div class="email-analysis">
+                    <div class="analysis-header">
+                        <div class="analysis-icon">
+                            <i class="fas fa-brain"></i>
+                        </div>
+                        <div class="analysis-info">
+                            <h3>Email Intelligence</h3>
+                            <p>AI-powered insights and suggestions</p>
+                        </div>
+                    </div>
+                    <div class="analysis-grid">
+                        <div class="analysis-card">
+                            <h4>Sentiment Analysis</h4>
+                            <div class="sentiment-indicator">
+                                <i class="fas fa-smile"></i>
+                                <span>Positive</span>
+                            </div>
+                        </div>
+                        <div class="analysis-card">
+                            <h4>Key Topics</h4>
+                            <div class="keyword-tags">
+                                <span class="keyword-tag">project</span>
+                                <span class="keyword-tag">meeting</span>
+                                <span class="keyword-tag">deadline</span>
+                            </div>
+                        </div>
+                        <div class="analysis-card">
+                            <h4>Urgency Level</h4>
+                            <span class="urgency-badge urgency-high">
+                                <i class="fas fa-exclamation-circle"></i>
+                                High Priority
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="smart-reply-container">
+                    <h3>Smart Reply Suggestions</h3>
+                    <div class="smart-reply-suggestions">
+                        <button class="smart-reply-chip">Thank you for your feedback!</button>
+                        <button class="smart-reply-chip">I'll look into this right away.</button>
+                        <button class="smart-reply-chip">Let's schedule a meeting to discuss.</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Voice Command System -->
+            <div class="voice-command-panel">
+                <button id="voice-command-toggle" class="voice-command-btn">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <div class="voice-feedback">
+                    <p id="voice-status">Click to start voice commands</p>
+                    <div class="voice-visualization">
+                        <div class="voice-wave"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Thread Visualization -->
+            <div class="thread-visualization" id="thread-viz">
+                <div class="thread-header">
+                    <h3>Email Thread Map</h3>
+                    <div class="thread-controls">
+                        <button class="thread-zoom-in"><i class="fas fa-plus"></i></button>
+                        <button class="thread-zoom-out"><i class="fas fa-minus"></i></button>
+                        <button class="thread-fit"><i class="fas fa-expand"></i></button>
+                    </div>
+                </div>
+                <div class="thread-canvas" id="thread-canvas"></div>
+            </div>
+
+            <!-- Add Focus Mode -->
+            <div class="focus-mode-panel" id="focus-mode">
+                <div class="focus-header">
+                    <h3>Focus Mode</h3>
+                    <button class="toggle-focus" id="toggle-focus">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+                <div class="pomodoro-timer">
+                    <div class="timer-display">
+                        <span id="timer-minutes">25</span>:<span id="timer-seconds">00</span>
+                    </div>
+                    <div class="timer-controls">
+                        <button id="start-timer"><i class="fas fa-play"></i></button>
+                        <button id="pause-timer"><i class="fas fa-pause"></i></button>
+                        <button id="reset-timer"><i class="fas fa-redo"></i></button>
+                    </div>
+                    <div class="timer-settings">
+                        <select id="timer-duration">
+                            <option value="25">25 minutes</option>
+                            <option value="45">45 minutes</option>
+                            <option value="60">60 minutes</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="focus-stats">
+                    <div class="focus-stat">
+                        <span class="stat-label">Focus Sessions</span>
+                        <span class="stat-value" id="focus-sessions">0</span>
+                    </div>
+                    <div class="focus-stat">
+                        <span class="stat-label">Total Focus Time</span>
+                        <span class="stat-value" id="total-focus-time">0h 0m</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Collaborative Features -->
+            <div class="collaboration-panel">
+                <div class="collab-header">
+                    <h3>Team Collaboration</h3>
+                    <button class="add-collaborator">
+                        <i class="fas fa-user-plus"></i>
+                    </button>
+                </div>
+                <div class="active-collaborators">
+                    <div class="collaborator-avatars" id="collaborator-list">
+                        <!-- Collaborators will be added dynamically -->
+                    </div>
+                </div>
+                <div class="shared-labels">
+                    <h4>Shared Labels</h4>
+                    <div class="label-list" id="shared-labels">
+                        <!-- Shared labels will be added dynamically -->
+                    </div>
+                </div>
+                <div class="team-activity">
+                    <h4>Recent Activity</h4>
+                    <div class="activity-feed" id="activity-feed">
+                        <!-- Activity items will be added dynamically -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Email Preview Pane -->
+        <aside class="preview-pane" id="preview-pane">
+            <div class="preview-header">
+                <h2>Email Preview</h2>
+                <button class="close-preview">×</button>
+            </div>
+            <div class="preview-content" id="preview-content">
+                <!-- Email preview will be shown here -->
+            </div>
+        </aside>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div id="loading-spinner" class="loading-spinner">
+        <div class="spinner-content"></div>
+        <p class="loading-text">Loading your emails...</p>
+    </div>
+
+    <!-- Email Summary Modal -->
+    <div id="summary-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <div id="summary-content"></div>
+        </div>
+    </div>
+
+    <!-- Filter Modal -->
+    <div id="filter-modal" class="modal">
+        <div class="modal-content filter-modal-content">
+            <span class="close-modal">&times;</span>
+            <h2>Filter Emails</h2>
+            <div class="filter-options">
+                <div class="filter-group">
+                    <h3>Date Range</h3>
+                    <select id="date-filter">
+                        <option value="all">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <h3>Categories</h3>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" value="work"> Work</label>
+                        <label><input type="checkbox" value="personal"> Personal</label>
+                        <label><input type="checkbox" value="social"> Social</label>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <h3>Status</h3>
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" value="unread"> Unread</label>
+                        <label><input type="checkbox" value="starred"> Starred</label>
+                        <label><input type="checkbox" value="attachments"> With Attachments</label>
+                    </div>
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button class="button secondary" id="reset-filters">Reset</button>
+                <button class="button primary" id="apply-filters">Apply Filters</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Compose Button -->
+    <button class="compose-btn" id="compose-btn">
+        <i class="fas fa-pen"></i>
+        <span>Compose</span>
+    </button>
+
+    <!-- Compose Email Modal -->
+    <div id="compose-modal" class="modal compose-modal">
+        <div class="modal-content compose-modal-content">
+            <div class="compose-header">
+                <h2>New Message</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="compose-form" class="compose-form">
+                <div class="compose-field">
+                    <label for="to">To:</label>
+                    <input type="email" id="to" name="to" required>
+                </div>
+                <div class="compose-field">
+                    <label for="cc">Cc:</label>
+                    <input type="email" id="cc" name="cc" multiple>
+                </div>
+                <div class="compose-field">
+                    <label for="subject">Subject:</label>
+                    <input type="text" id="subject" name="subject" required>
+                </div>
+                <div class="compose-field">
+                    <label for="message">Message:</label>
+                    <div class="rich-editor">
+                        <div class="editor-toolbar">
+                            <button type="button" data-command="bold" title="Bold">
+                                <i class="fas fa-bold"></i>
+                            </button>
+                            <button type="button" data-command="italic" title="Italic">
+                                <i class="fas fa-italic"></i>
+                            </button>
+                            <button type="button" data-command="underline" title="Underline">
+                                <i class="fas fa-underline"></i>
+                            </button>
+                            <button type="button" data-command="insertUnorderedList" title="Bullet List">
+                                <i class="fas fa-list-ul"></i>
+                            </button>
+                            <button type="button" data-command="insertOrderedList" title="Numbered List">
+                                <i class="fas fa-list-ol"></i>
+                            </button>
+                            <button type="button" data-command="createLink" title="Insert Link">
+                                <i class="fas fa-link"></i>
+                            </button>
+                            <button type="button" data-command="insertImage" title="Insert Image">
+                                <i class="fas fa-image"></i>
+                            </button>
+                        </div>
+                        <div id="editor" class="editor-content" contenteditable="true"></div>
+                    </div>
+                </div>
+                <div class="compose-attachments" id="attachment-preview">
+                    <div class="attachment-dropzone" id="attachment-dropzone">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Drop files here or click to attach</p>
+                        <input type="file" id="attachment-input" multiple hidden>
+                    </div>
+                    <div class="attachment-list" id="attachment-list"></div>
+                </div>
+                <div class="compose-actions">
+                    <button type="button" class="button secondary" id="save-draft">
+                        <i class="fas fa-save"></i>
+                        Save Draft
+                    </button>
+                    <button type="submit" class="button primary">
+                        <i class="fas fa-paper-plane"></i>
+                        Send
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Email Templates Modal -->
+    <div id="templates-modal" class="modal">
+        <div class="modal-content">
+            <div class="templates-header">
+                <h2>Email Templates</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="templates-grid">
+                <div class="template-card" data-template="meeting">
+                    <h3>Meeting Invitation</h3>
+                    <p>Professional template for scheduling meetings</p>
+                </div>
+                <div class="template-card" data-template="followup">
+                    <h3>Follow Up</h3>
+                    <p>Polite follow-up after a meeting or conversation</p>
+                </div>
+                <div class="template-card" data-template="thank-you">
+                    <h3>Thank You</h3>
+                    <p>Express gratitude professionally</p>
+                </div>
+                <div class="template-card" data-template="introduction">
+                    <h3>Introduction</h3>
+                    <p>Introduce yourself or your team</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Smart Suggestions Panel -->
+    <div class="smart-suggestions" id="smart-suggestions">
+        <div class="suggestions-header">
+            <h3>Smart Suggestions</h3>
+            <button class="close-suggestions">&times;</button>
+        </div>
+        <div class="suggestions-content">
+            <div class="suggestion-category">
+                <h4>Response Suggestions</h4>
+                <div class="suggestion-chips"></div>
+            </div>
+            <div class="suggestion-category">
+                <h4>Attachments</h4>
+                <div class="suggested-attachments"></div>
+            </div>
+            <div class="suggestion-category">
+                <h4>Recipients</h4>
+                <div class="suggested-recipients"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Keyboard Shortcuts Guide -->
+    <div class="shortcuts-panel" id="shortcuts-panel">
+        <div class="shortcuts-header">
+            <h3>Keyboard Shortcuts</h3>
+            <button class="close-shortcuts">×</button>
+        </div>
+        <div class="shortcuts-grid">
+            <div class="shortcut-group">
+                <h4>Navigation</h4>
+                <div class="shortcut-item">
+                    <kbd>j</kbd> / <kbd>k</kbd>
+                    <span>Next/Previous email</span>
+                </div>
+                <div class="shortcut-item">
+                    <kbd>g</kbd> + <kbd>i</kbd>
+                    <span>Go to inbox</span>
+                </div>
+            </div>
+            <div class="shortcut-group">
+                <h4>Actions</h4>
+                <div class="shortcut-item">
+                    <kbd>c</kbd>
+                    <span>Compose new email</span>
+                </div>
+                <div class="shortcut-item">
+                    <kbd>r</kbd>
+                    <span>Reply</span>
+                </div>
+                <div class="shortcut-item">
+                    <kbd>a</kbd>
+                    <span>Reply all</span>
+                </div>
+                <div class="shortcut-item">
+                    <kbd>f</kbd>
+                    <span>Forward</span>
+                </div>
+            </div>
+            <div class="shortcut-group">
+                <h4>Organization</h4>
+                <div class="shortcut-item">
+                    <kbd>s</kbd>
+                    <span>Star/Unstar</span>
+                </div>
+                <div class="shortcut-item">
+                    <kbd>e</kbd>
+                    <span>Archive</span>
+                </div>
+                <div class="shortcut-item">
+                    <kbd>#</kbd>
+                    <span>Delete</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="config.js"></script>
+    <script src="script.js"></script>
+
+    <!-- Schedule Email Modal -->
+    <div id="schedule-modal" class="modal">
+        <div class="modal-content schedule-modal">
+            <div class="modal-header">
+                <h2>Schedule Email</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form class="schedule-form">
+                <div class="schedule-datetime">
+                    <div class="form-group">
+                        <label for="schedule-date">Date</label>
+                        <input type="date" id="schedule-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="schedule-time">Time</label>
+                        <input type="time" id="schedule-time" required>
+                    </div>
+                </div>
+                <div class="schedule-options">
+                    <button type="button" class="schedule-option">Later Today</button>
+                    <button type="button" class="schedule-option">Tomorrow Morning</button>
+                    <button type="button" class="schedule-option">Next Week</button>
+                </div>
+                <div class="form-group">
+                    <label for="schedule-timezone">Timezone</label>
+                    <select id="schedule-timezone">
+                        <option value="local">Local Time</option>
+                        <option value="utc">UTC</option>
+                        <option value="est">EST</option>
+                        <option value="pst">PST</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="button secondary">Cancel</button>
+                    <button type="submit" class="button primary">Schedule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Enhanced Search Bar -->
+    <div class="search-container">
+        <i class="fas fa-search search-icon"></i>
+        <input type="text" class="search-input" placeholder="Search emails, contacts, or content...">
+        <div class="search-suggestions">
+            <div class="search-suggestion">
+                <i class="fas fa-envelope"></i>
+                <span>Recent Emails</span>
+            </div>
+            <div class="search-suggestion">
+                <i class="fas fa-user"></i>
+                <span>Contacts</span>
+            </div>
+            <div class="search-suggestion">
+                <i class="fas fa-paperclip"></i>
+                <span>Attachments</span>
+            </div>
+        </div>
+        <div class="search-filters">
+            <button class="search-filter active">All</button>
+            <button class="search-filter">Unread</button>
+            <button class="search-filter">Attachments</button>
+            <button class="search-filter">Date</button>
+        </div>
+    </div>
+
+    <!-- Add Contact Details Modal -->
+    <div id="contact-details-modal" class="modal">
+        <div class="modal-content">
+            <!-- Contact details will be added dynamically -->
+        </div>
+    </div>
+
+    <!-- Add Sharing Modal -->
+    <div id="sharing-modal" class="modal">
+        <div class="modal-content">
+            <!-- Sharing options will be added dynamically -->
+        </div>
+    </div>
+
+    <!-- Add Smart Folder Creation Modal -->
+    <div id="create-folder-modal" class="modal">
+        <div class="modal-content">
+            <h3>Create Smart Folder</h3>
+            <form id="create-folder-form">
+                <div class="form-group">
+                    <label for="folder-name">Folder Name</label>
+                    <input type="text" id="folder-name" required>
+                </div>
+                <div class="form-group">
+                    <label>Conditions</label>
+                    <div class="conditions-builder">
+                        <select class="condition-type">
+                            <option value="from">From</option>
+                            <option value="to">To</option>
+                            <option value="subject">Subject</option>
+                            <option value="hasAttachment">Has Attachment</option>
+                            <option value="isImportant">Is Important</option>
+                        </select>
+                        <input type="text" class="condition-value">
+                        <button type="button" class="add-condition">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <div id="conditions-list">
+                        <!-- Conditions will be added dynamically -->
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="submit">Create Folder</button>
+                    <button type="button" onclick="document.getElementById('create-folder-modal').style.display='none'">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Notification Center -->
+    <div class="notification-center">
+        <div class="notification-header">
+            <h3>Notifications</h3>
+            <button class="clear-all">Clear All</button>
+        </div>
+        <div id="notifications-list">
+            <!-- Notifications will be added dynamically -->
+        </div>
+    </div>
+
+    <!-- Add Quick Actions Menu -->
+    <div class="quick-actions-menu">
+        <button class="quick-action" title="New Email">
+            <i class="fas fa-pen"></i>
+        </button>
+        <button class="quick-action" title="New Contact">
+            <i class="fas fa-user-plus"></i>
+        </button>
+        <button class="quick-action" title="New Smart Folder">
+            <i class="fas fa-folder-plus"></i>
+        </button>
+        <button class="quick-action" title="Share">
+            <i class="fas fa-share-alt"></i>
+        </button>
+    </div>
+
+    <!-- Add Scroll Top Button -->
+    <button id="scroll-top-btn" class="scroll-top-btn" title="Go to top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
+</body>
+</html>
+
